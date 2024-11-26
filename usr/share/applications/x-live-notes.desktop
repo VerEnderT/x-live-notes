@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=0.0.1
+Type=Application
+Name=X-Live Notes
+Exec=x-live-notes
+Icon=x-live-notes
+Categories=Office;
+Keywords=office;note;notes;write
+StartupNotify=true
+X-GNOME-UsesNotifications=true
+GenericName=Notes
+GenericName[de]=Notiz
