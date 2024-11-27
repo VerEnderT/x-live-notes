@@ -3,4 +3,4 @@
 
 ---
 
-![screenshot](screenshot.png)
+![screenshot](new_screenshot.png)
