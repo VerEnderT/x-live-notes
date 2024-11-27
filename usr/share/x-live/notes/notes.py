@@ -6,10 +6,10 @@ import subprocess
 import re
 import yaml
 import locale
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QLineEdit, QListWidget,
-                             QVBoxLayout, QHBoxLayout, QWidget, QSystemTrayIcon, QSplitter,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QLineEdit, QListWidget, QFontDialog,
+                             QVBoxLayout, QHBoxLayout, QWidget, QSystemTrayIcon, QSplitter, QLabel,
                              QMenu, QAction, QInputDialog, QMessageBox, QPushButton, QGridLayout)
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QFile, QTextStream, QDir, Qt, QEvent, QTranslator
 
 # Pfad zum Arbeitsverzeichnis festlegen
@@ -66,6 +66,7 @@ class NotizVerwaltung(QMainWindow):
         # Notizen und Fenstereinstellungen laden
         self.load_notes()
         self.load_window_settings()
+        self.check_font()
 
         # Themenanpassung
         self.background_color()
@@ -90,6 +91,13 @@ class NotizVerwaltung(QMainWindow):
         delete_action.triggered.connect(self.delete_note)
         self.button_menu.addAction(delete_action)
         self.list_menu.addAction(delete_action)
+
+        self.button_menu.addSeparator()
+
+        self.font_action = QAction("Schriftart", self)
+        self.font_action.setIcon(QIcon("./font.png"))
+        self.font_action.triggered.connect(self.change_font)
+        self.button_menu.addAction(self.font_action)
 
         self.button_menu.addSeparator()
 
@@ -132,6 +140,7 @@ class NotizVerwaltung(QMainWindow):
         self.listWidget = QListWidget()         
         left_layout.addWidget(self.listWidget)
         self.textEdit = QTextEdit()
+        self.textEdit.setAcceptRichText(False) 
         self.splitter = QSplitter()
         left_widget = QWidget()
         left_widget.setLayout(left_layout)
@@ -145,11 +154,9 @@ class NotizVerwaltung(QMainWindow):
 
     def show_context_menu(self, pos):
         # Menü an der Position für das QListWidget anzeigen
-        print(pos)
         self.list_menu.exec_(self.mapToGlobal(pos))
 
     def splitter_toogle(self):
-        print(self.splitter.sizes()[0]," # ",self.splitter.sizes()[1])
         if self.splitter.sizes()[0] != 0:
             self.splitter.setSizes([0, self.splitter.sizes()[1]])
         else:
@@ -157,8 +164,6 @@ class NotizVerwaltung(QMainWindow):
             self.splitter.setSizes([self.listWidget.width(), self.splitter.sizes()[1]])
             self.listWidget.adjustSize()
             self.splitter.setSizes([self.listWidget.width(), self.splitter.sizes()[1]])
-            #self.listWidget.adjustSize()
-            #self.splitter.setSizes([self.listWidget.width(), self.splitter.sizes()[1]])
 
     def init_tray_icon(self):
         """Erstellt ein Tray-Icon mit Menü."""
@@ -370,16 +375,21 @@ class NotizVerwaltung(QMainWindow):
         event.ignore()
         self.hide()
         
-       
     def save_window_settings(self):
-        
+        current_font = self.textEdit.font()
         if not os.path.exists(self.settings_dir):
             os.makedirs(self.settings_dir)
-        """Speichert die Fenster- und Splitter-Positionen in einer YAML-Datei."""
+
         settings = {
-            'geometry': self.saveGeometry().data().hex(),  # Speichert die Geometrie
-            'state': self.saveState().data().hex(),        # Speichert den Zustand
-            'splitter_sizes': self.splitter.sizes()        # Speichert die Größen des Splitters
+            'geometry': self.saveGeometry().data().hex(),   # Speichert die Geometrie
+            'state': self.saveState().data().hex(),         # Speichert den Zustand
+            'splitter_sizes': self.splitter.sizes(),        # Speichert die Größen des Splitters
+            'font': {
+                'family': current_font.family(),
+                'size': current_font.pointSize(),
+                'bold': current_font.bold(),
+                'italic': current_font.italic()
+            }  # Speichert die Schriftart als Dictionary
         }
         with open(self.settings_file, 'w') as file:
             yaml.dump(settings, file)
@@ -390,12 +400,49 @@ class NotizVerwaltung(QMainWindow):
             with open(self.settings_file, 'r') as file:
                 settings = yaml.load(file, Loader=yaml.FullLoader)
                 if settings:
-                    self.restoreGeometry(bytes.fromhex(settings['geometry']))  # Stelle die Geometrie wieder her
-                    self.restoreState(bytes.fromhex(settings['state']))        # Stelle den Zustand wieder her
-                    self.splitter.setSizes(settings['splitter_sizes'])        # Stelle die Größen des Splitters wieder her
- 
+                    self.restoreGeometry(bytes.fromhex(settings['geometry']))   # Stelle die Geometrie wieder her
+                    self.restoreState(bytes.fromhex(settings['state']))         # Stelle den Zustand wieder her
+                    self.splitter.setSizes(settings['splitter_sizes'])          # Stelle die Größen des Splitters wieder her
+                    
+                    # Schriftart wiederherstellen
+                    font_data = settings.get('font', {})
+                    if font_data:
+                        font = QFont()
+                        font.setFamily(font_data.get('family', ''))
+                        font.setPointSize(font_data.get('size', 12))  # Standardgröße 12 pt
+                        font.setBold(font_data.get('bold', False))
+                        font.setItalic(font_data.get('italic', False))
+                        self.textEdit.setFont(font)
+  
         
-        
+    def check_font(self):
+        # Aktuelle Schriftart des Labels abfragen
+        current_font = self.textEdit.font()
+        font_name = current_font.family()
+        font_size = current_font.pointSize()
+        is_bold = current_font.bold()
+        is_italic = current_font.italic()
+
+        # Stiltext erstellen
+        style_text = []
+        if is_bold:
+            style_text.append("Fett")
+        if is_italic:
+            style_text.append("Kursiv")
+        if not style_text:
+            style_text.append("")
+            #style_text.append("Normal")
+        style_text = " und ".join(style_text)
+
+        # Schriftinformationen anzeigen
+        self.font_action.setText(f"Schriftart: {font_name} {style_text} - {font_size}px")
+
+    def change_font(self):
+        # Schriftart ändern
+        font, ok = QFontDialog.getFont(self.textEdit.font(), self)  # Aktuelle Schriftart als Standard übergeben
+        if ok:
+            self.textEdit.setFont(font)
+        self.check_font()
         
     # Farbprofil abrufen und anwenden
 
@@ -407,11 +454,9 @@ class NotizVerwaltung(QMainWindow):
             if theme_name:
                 return theme_name
         except FileNotFoundError:
-            pass
             print("xfconf-query nicht gefunden. Versuche gsettings.")
         except Exception as e:
             print(f"Error getting theme with xfconf-query: {e}")
-            pass
         try:
             # Fallback auf gsettings, falls xfconf-query nicht vorhanden ist
             result = subprocess.run(['gsettings', 'get', 'org.gnome.desktop.interface', 'gtk-theme'], capture_output=True, text=True)
@@ -420,7 +465,6 @@ class NotizVerwaltung(QMainWindow):
                 return theme_name
         except Exception as e:
             print(f"Error getting theme with gsettings: {e}")
-            pass
     
         return None
 
@@ -428,7 +472,6 @@ class NotizVerwaltung(QMainWindow):
         try:
             with open(css_file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
-                #print(content)
                 # Muster zum Finden der Farbe
                 pattern = r'{}[\s:]+([#\w]+)'.format(re.escape(color_name))
                 match = re.search(pattern, content)
@@ -436,22 +479,18 @@ class NotizVerwaltung(QMainWindow):
                     return match.group(1)
                 return None
         except IOError as e:
-            #print(f"Error reading file: {e}")
+            print(f"Error reading file: {e}")
             return None
             
             
     def background_color(self):
         theme_name = self.get_current_theme()
         if theme_name:
-            #print(f"Current theme: {theme_name}")
-
             # Pfad zur GTK-CSS-Datei des aktuellen Themes
             css_file_path = f'/usr/share/themes/{theme_name}/gtk-3.0/gtk.css'
             if os.path.exists(css_file_path):
                 bcolor = self.extract_color_from_css(css_file_path, ' background-color')
                 color = self.extract_color_from_css(css_file_path, ' color')
-                #print(f"bg={bcolor} fg={color}")
-                #self.setStyleSheet(f"background: {bcolor};color: {color}")
                 self.setStyleSheet("""
                             QPushButton {
                                 color: """ + color + """;  /* Farbe */
@@ -502,11 +541,9 @@ class NotizVerwaltung(QMainWindow):
                         """)
 
             else:
-                pass
-                #print(f"CSS file not found: {css_file_path}")
+                print(f"CSS file not found: {css_file_path}")
         else:
-            pass
-            #print("Unable to determine the current theme.")
+            print("Unable to determine the current theme.")
 
 
     # Ermittlung der Benutzersprache
@@ -572,14 +609,12 @@ if __name__ == "__main__":
         # Deutsche Übersetzung laden
         if translator.load("/usr/share/qt5/translations/qtbase_de.qm"):
             app.installTranslator(translator)
-            print("Deutsch wurde erfolgreich geladen")
         else:
             print("Fehler: Deutsche Übersetzungsdatei nicht gefunden")
     else:
         # Englische Übersetzung laden
         if translator.load("/usr/share/qt5/translations/qtbase_en.qm"):
             app.installTranslator(translator)
-            print("Englisch wurde erfolgreich geladen")
         else:
             print("Fehler: Englische Übersetzungsdatei nicht gefunden")
 
