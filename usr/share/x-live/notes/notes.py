@@ -264,7 +264,9 @@ class NotizVerwaltung(QMainWindow):
             self.textEdit.blockSignals(False)  # Reaktiviert Signale
         file.close()
         self.text_changed = False  # Text ist noch nicht geändert worden
-        self.setWindowTitle(f"Notizverwaltung - {note_file.replace(".txt","")}")
+        if note_file != "":
+            note_file_clean=note_file.replace(".txt","")
+            self.setWindowTitle(f"Notizverwaltung - {note_file_clean}")
 
     def on_text_changed(self):
         # Markiert den Text als geändert
@@ -462,6 +464,7 @@ class NotizVerwaltung(QMainWindow):
             result = subprocess.run(['gsettings', 'get', 'org.gnome.desktop.interface', 'gtk-theme'], capture_output=True, text=True)
             theme_name = result.stdout.strip().strip("'")
             if theme_name:
+                print("gsettings",theme_name)
                 return theme_name
         except Exception as e:
             print(f"Error getting theme with gsettings: {e}")
@@ -472,6 +475,7 @@ class NotizVerwaltung(QMainWindow):
         try:
             with open(css_file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
+                #print(content)
                 # Muster zum Finden der Farbe
                 pattern = r'{}[\s:]+([#\w]+)'.format(re.escape(color_name))
                 match = re.search(pattern, content)
@@ -485,65 +489,124 @@ class NotizVerwaltung(QMainWindow):
             
     def background_color(self):
         theme_name = self.get_current_theme()
+        #print("bg_color",theme_name)
         if theme_name:
             # Pfad zur GTK-CSS-Datei des aktuellen Themes
             css_file_path = f'/usr/share/themes/{theme_name}/gtk-3.0/gtk.css'
             if os.path.exists(css_file_path):
                 bcolor = self.extract_color_from_css(css_file_path, ' background-color')
                 color = self.extract_color_from_css(css_file_path, ' color')
+                if bcolor.startswith("rgba") == False:
+                    self.setStyleSheet("""
+                                QPushButton {
+                                    color: """ + color + """;  /* Farbe */
+                                    background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
+
+                                }
+                                QPushButton::hover {
+                                    color: """ + bcolor + """;  /* Farbe */
+                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
+
+                                }
+
+                                QMenu {
+                                    color: """ + bcolor + """;  /* Farbe */
+                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
+                                    border: 3px solid """ + bcolor + """; /* Rahmen */
+                                    border-radius: 3px;
+                                }
+                                QMenu::item {
+                                    padding: 2px 8px;        /* Innenabstand */
+                                    margin: 0px;             /* Abstand zwischen Items */
+                                }
+                                QMenu::item:disabled {
+                                    color: #20""" + color.replace('#','') + """;  /* Farbe */
+                                    background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
+                                }
+                                QMenu::item:selected {       /* Hover-Effekt */
+                                    color: """ + bcolor + """;  /* Farbe */
+                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
+                                }
+                                QMenu::separator {
+                                    height: 2px;
+                                    background: """ + color + """;
+                                    margin: 2px 2px;
+                                }
+                                QWidget {
+                                    color: """ + color + """;  /* Farbe */
+                                    background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
+
+                                }
+                                QTextEdit {
+                                    color: """ + bcolor + """;  /* Farbe */
+                                    border-color: """ + color + """; /* Rahmenfarbe */
+                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
+                                    border-radius: 5px; /* abgerundete Ecken */
+
+                                }
+                            """)
+                else:
+                    self.setStyleSheet("""
+
+                                QMenu {
+                                    border: 3px; /* Rahmen */
+                                    border-radius: 3px;
+                                }
+                                QMenu::item {
+                                    padding: 2px 8px;        /* Innenabstand */
+                                    margin: 0px;             /* Abstand zwischen Items */
+                                }
+                                }
+                                QMenu::separator {
+                                    height: 2px;
+                                    margin: 2px 2px;
+                                }
+                                QTextEdit {
+                                    border-radius: 5px; /* abgerundete Ecken */
+                                }
+                            """)
+            else:
+                print(f"CSS file not found: {css_file_path}")
                 self.setStyleSheet("""
-                            QPushButton {
-                                color: """ + color + """;  /* Farbe */
-                                background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
-
-                            }
-                            QPushButton::hover {
-                                color: """ + bcolor + """;  /* Farbe */
-                                background-color: """ + color + """;    /* Hintergrundfarbe  */
-
-                            }
 
                             QMenu {
-                                color: """ + bcolor + """;  /* Farbe */
-                                background-color: """ + color + """;    /* Hintergrundfarbe  */
-                                border: 3px solid """ + bcolor + """; /* Rahmen */
+                                border: 3px; /* Rahmen */
                                 border-radius: 3px;
                             }
                             QMenu::item {
                                 padding: 2px 8px;        /* Innenabstand */
                                 margin: 0px;             /* Abstand zwischen Items */
                             }
-                            QMenu::item:disabled {
-                                color: #20""" + color.replace('#','') + """;  /* Farbe */
-                                background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
-                            }
-                            QMenu::item:selected {       /* Hover-Effekt */
-                                color: """ + bcolor + """;  /* Farbe */
-                                background-color: """ + color + """;    /* Hintergrundfarbe  */
                             }
                             QMenu::separator {
                                 height: 2px;
-                                background: """ + color + """;
                                 margin: 2px 2px;
                             }
-                            QWidget {
-                                color: """ + color + """;  /* Farbe */
-                                background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
-
-                            }
                             QTextEdit {
-                                color: """ + bcolor + """;  /* Farbe */
-                                border-color: """ + color + """; /* Rahmenfarbe */
-                                background-color: """ + color + """;    /* Hintergrundfarbe  */
                                 border-radius: 5px; /* abgerundete Ecken */
-
                             }
                         """)
-
-            else:
-                print(f"CSS file not found: {css_file_path}")
         else:
             print("Unable to determine the current theme.")
+            self.setStyleSheet("""
+
+                        QMenu {
+                            border: 3px; /* Rahmen */
+                            border-radius: 3px;
+                        }
+                        QMenu::item {
+                            padding: 2px 8px;        /* Innenabstand */
+                            margin: 0px;             /* Abstand zwischen Items */
+                        }
+                        }
+                        QMenu::separator {
+                            height: 2px;
+                            margin: 2px 2px;
+                        }
+                        QTextEdit {
+                            border-radius: 5px; /* abgerundete Ecken */
+                        }
+                    """)
 
 
     # Ermittlung der Benutzersprache
