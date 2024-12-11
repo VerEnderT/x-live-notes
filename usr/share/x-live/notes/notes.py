@@ -496,75 +496,76 @@ class NotizVerwaltung(QMainWindow):
             if os.path.exists(css_file_path):
                 bcolor = self.extract_color_from_css(css_file_path, ' background-color')
                 color = self.extract_color_from_css(css_file_path, ' color')
-                if bcolor.startswith("rgba") == False:
-                    self.setStyleSheet("""
-                                QPushButton {
-                                    color: """ + color + """;  /* Farbe */
-                                    background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
+                if bcolor:
+                    if bcolor.startswith("rgba") == False:
+                        self.setStyleSheet("""
+                                    QPushButton {
+                                        color: """ + color + """;  /* Farbe */
+                                        background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
 
-                                }
-                                QPushButton::hover {
-                                    color: """ + bcolor + """;  /* Farbe */
-                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
+                                    }
+                                    QPushButton::hover {
+                                        color: """ + bcolor + """;  /* Farbe */
+                                        background-color: """ + color + """;    /* Hintergrundfarbe  */
 
-                                }
+                                    }
 
-                                QMenu {
-                                    color: """ + bcolor + """;  /* Farbe */
-                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
-                                    border: 3px solid """ + bcolor + """; /* Rahmen */
-                                    border-radius: 3px;
-                                }
-                                QMenu::item {
-                                    padding: 2px 8px;        /* Innenabstand */
-                                    margin: 0px;             /* Abstand zwischen Items */
-                                }
-                                QMenu::item:disabled {
-                                    color: #20""" + color.replace('#','') + """;  /* Farbe */
-                                    background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
-                                }
-                                QMenu::item:selected {       /* Hover-Effekt */
-                                    color: """ + bcolor + """;  /* Farbe */
-                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
-                                }
-                                QMenu::separator {
-                                    height: 2px;
-                                    background: """ + color + """;
-                                    margin: 2px 2px;
-                                }
-                                QWidget {
-                                    color: """ + color + """;  /* Farbe */
-                                    background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
+                                    QMenu {
+                                        color: """ + bcolor + """;  /* Farbe */
+                                        background-color: """ + color + """;    /* Hintergrundfarbe  */
+                                        border: 3px solid """ + bcolor + """; /* Rahmen */
+                                        border-radius: 3px;
+                                    }
+                                    QMenu::item {
+                                        padding: 2px 8px;        /* Innenabstand */
+                                        margin: 0px;             /* Abstand zwischen Items */
+                                    }
+                                    QMenu::item:disabled {
+                                        color: #20""" + color.replace('#','') + """;  /* Farbe */
+                                        background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
+                                    }
+                                    QMenu::item:selected {       /* Hover-Effekt */
+                                        color: """ + bcolor + """;  /* Farbe */
+                                        background-color: """ + color + """;    /* Hintergrundfarbe  */
+                                    }
+                                    QMenu::separator {
+                                        height: 2px;
+                                        background: """ + color + """;
+                                        margin: 2px 2px;
+                                    }
+                                    QWidget {
+                                        color: """ + color + """;  /* Farbe */
+                                        background-color: """ + bcolor + """;    /* Hintergrundfarbe  */
 
-                                }
-                                QTextEdit {
-                                    color: """ + bcolor + """;  /* Farbe */
-                                    border-color: """ + color + """; /* Rahmenfarbe */
-                                    background-color: """ + color + """;    /* Hintergrundfarbe  */
-                                    border-radius: 5px; /* abgerundete Ecken */
+                                    }
+                                    QTextEdit {
+                                        color: """ + bcolor + """;  /* Farbe */
+                                        border-color: """ + color + """; /* Rahmenfarbe */
+                                        background-color: """ + color + """;    /* Hintergrundfarbe  */
+                                        border-radius: 5px; /* abgerundete Ecken */
 
-                                }
-                            """)
-                else:
-                    self.setStyleSheet("""
+                                    }
+                                """)
+                    else:
+                        self.setStyleSheet("""
 
-                                QMenu {
-                                    border: 3px; /* Rahmen */
-                                    border-radius: 3px;
-                                }
-                                QMenu::item {
-                                    padding: 2px 8px;        /* Innenabstand */
-                                    margin: 0px;             /* Abstand zwischen Items */
-                                }
-                                }
-                                QMenu::separator {
-                                    height: 2px;
-                                    margin: 2px 2px;
-                                }
-                                QTextEdit {
-                                    border-radius: 5px; /* abgerundete Ecken */
-                                }
-                            """)
+                                    QMenu {
+                                        border: 3px; /* Rahmen */
+                                        border-radius: 3px;
+                                    }
+                                    QMenu::item {
+                                        padding: 2px 8px;        /* Innenabstand */
+                                        margin: 0px;             /* Abstand zwischen Items */
+                                    }
+                                    }
+                                    QMenu::separator {
+                                        height: 2px;
+                                        margin: 2px 2px;
+                                    }
+                                    QTextEdit {
+                                        border-radius: 5px; /* abgerundete Ecken */
+                                    }
+                                """)
             else:
                 print(f"CSS file not found: {css_file_path}")
                 self.setStyleSheet("""
